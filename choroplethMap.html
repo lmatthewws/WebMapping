@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+ <head>
+     <meta charset='utf-8' />
+     <title>Swipe between maps</title>
+     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js'></script>
+     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css' rel='stylesheet' />
+		
+     <!-- JS and CSS for the swipe plugin -->
+     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js'></script>
+     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css' type='text/css' />
+      <style>
+      body { margin:0; padding:0;overflow: hidden;}
+      body * {
+         -webkit-touch-callout: none;
+           -webkit-user-select: none;
+          -moz-user-select: none;
+           -ms-user-select: none;
+               user-select: none;
+          }
+		 
+      .map {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 100%;
+          }
+      </style>
+ </head>
+ <body>
+     <div id="comparison-container">
+      		<div id='owners' class='map'></div>  <!-- div for owners map div -->
+      		<div id='renters' class='map'></div> <!--  div for renters map div -->
+  		</div>
+
+     <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoibG1hdHRoZTIiLCJhIjoiY2xnd2ppOHVxMDF4djNlbzFvYjR5eml0ZCJ9.FLYKA6gbQRCGoucjxieiEQ';
+        var ownerMap = new mapboxgl.Map({
+            container: 'owners', // owners map div 
+            style: 'mapbox://styles/mapbox/dark-v10', // Mapbox dark style 
+            center: [-122.6706821190038, 45.52407840008533], 
+            zoom: 9 
+        });
+         
+        ownerMap.on('load', function() {
+            ownerMap.addLayer({
+            id: 'Owner Data',
+            type: "fill",
+              source: {
+                type: 'vector',
+                url: 'mapbox://lmatthe2.5hdlzcgv'  //input your tileset ID url e.g. 'mapbox://jomerson.6ykhlovc' 
+              },
+                'source-layer': 'Owner-Renter-Pop-5ozgcc', //input your source layer name e.g. 'Owner-Renter-Pop-ca08iw'
+              paint: {
+                    'fill-color': ["step",
+                           ["get", "Own"],
+                           "#feebe2",
+                           17.0,
+                           "#fbb4b9",
+                           22.0,
+                           "#f768a1",
+                           27.0,
+                           "#c51b8a",
+                           32.0,
+                            "#7a0177"],
+                           "fill-opacity": 0.7,
+                  }
+
+            });
+        });
+        
+         ownerMap.on('mousemove', 'Owner Data', function (e) {
+        
+             // Change the cursor style as a UI indicator.
+             ownerMap.getCanvas().style.cursor = 'pointer';
+
+             var coordinates = e.lngLat;
+             var description = e.features[0].properties.Own;
+
+             // Populate the popup and set its coordinates
+             // based on the feature found.
+             popup.setLngLat(coordinates)
+                .setHTML(description + "% Owners")
+                .addTo(ownerMap);
+         });
+
+         ownerMap.on('mouseleave', 'Owner Data', function () {
+             ownerMap.getCanvas().style.cursor = '';
+             popup.remove();
+         });
+         
+        var renterMap = new mapboxgl.Map({
+            container: 'renters', // owners map div 
+            style: 'mapbox://styles/mapbox/dark-v10', // Mapbox light style so we can observe the swipe
+            center: [-122.6706821190038, 45.52407840008533],// Use the same center as your other map so that they are perfectly aligned
+            zoom: 9 
+        });
+         
+        renterMap.on('load', function() {
+            renterMap.addLayer({
+                  id: 'Renter Data',
+                  type: "fill",
+                  source: {
+                    type: 'vector',
+                    url: 'mapbox://lmatthe2.5hdlzcgv' //input your tileset ID URL
+                  },
+                    'source-layer': 'Owner-Renter-Pop-5ozgcc', //input your source layer name e.g. Owner-Renter-Pop-dr7310
+                  paint: {
+                    'fill-color': ["step",
+                           ["get", "Rent"],
+                           "#feebe2",
+                           17.0,
+                           "#fbb4b9",
+                           22.0,
+                           "#f768a1",
+                           27.0,
+                           "#c51b8a",
+                           32.0,
+                            "#7a0177"],
+                           "fill-opacity": 0.7,
+                  }
+            });
+        });
+         
+        renterMap.on('mousemove', 'Renter Data', function (e) {
+
+                 // Change the cursor style as a UI indicator.
+                 renterMap.getCanvas().style.cursor = 'pointer';
+
+                 var coordinates = e.lngLat;
+                 var description = e.features[0].properties.Rent;
+
+                 // Populate the popup and set its coordinates
+                 // based on the feature found.
+                 popup.setLngLat(coordinates)
+                     .setHTML(description + "% Renters")
+                     .addTo(renterMap);
+             });
+
+             renterMap.on('mouseleave', 'Renter Data', function () {
+                renterMap.getCanvas().style.cursor = '';
+                popup.remove();
+             }); 
+         
+        // A selector or reference to HTML element
+         var container = '#comparison-container';
+
+         var map = new mapboxgl.Compare(ownerMap, renterMap, container, {
+         })
+         
+          // Create a popup, but don't add it to the map yet.
+         var popup = new mapboxgl.Popup({
+             closeButton: false,
+             closeOnClick: false
+             });
+
+     </script>
+
+     </body>
+ </html> 
